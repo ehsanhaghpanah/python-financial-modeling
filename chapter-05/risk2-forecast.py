@@ -1,5 +1,6 @@
 # %%
 import math
+import pandas as pd
 import numpy as np
 import numpy_financial as nf
 import matplotlib.pyplot as pl
@@ -29,24 +30,24 @@ class Forecast(object): # =====================================
           print(f'col = {col}, standard deviation = {round(ar.std(), 4)}')
           pass
 
-     def expected_return(self, col: str) -> float:
+     def mu(self, col: str) -> float:
           ls = [self.items[col][i] * self.props[i] for i in range(0, len(self.props))]                        # r(i) * p(i)
           ar = np.asarray(ls)
           return round(ar.sum(), 4)                                                                           # sigma(r(i) * p(i))
 
      def variance(self, col: str) -> float:
-          rb = self.expected_return(col)                                                                      # r-bar (or expected return)
+          rb = self.mu(col)                                                                      # r-bar (or expected return)
           ls = [(((self.items[col][i] - rb) ** 2) * self.props[i]) for i in range(0, len(self.props))]        # (r(i) - rbar)^2 * p(i)
           ar = np.asarray(ls)
           return round(ar.sum(), 4)                                                                           # sigma((r(i) - rbar)^2 * p(i))
      
-     def standard_deviation(self, col: str) -> float:
+     def sigma(self, col: str) -> float:
           return round(math.sqrt(self.variance(col)), 4)
 
      def analyze_a(self):
           ls: dict = {}
           for nm in self.items:
-               ls[nm] = self.expected_return(nm)
+               ls[nm] = self.mu(nm)
           ls = dict(sorted(ls.items(), key= (lambda item: item[1]), reverse= True))
           for nm in ls:
                print(f'{nm}, expected return = {ls[nm]}')
@@ -55,7 +56,7 @@ class Forecast(object): # =====================================
      def analyze_b(self):
           ls: dict = {}
           for nm in self.items:
-               ls[nm] = self.standard_deviation(nm)
+               ls[nm] = self.sigma(nm)
           ls = dict(sorted(ls.items(), key= (lambda item: item[1]), reverse= True))
           for nm in ls:
                print(f'{nm}, standard deviation = {ls[nm]}')
@@ -63,8 +64,8 @@ class Forecast(object): # =====================================
 
      def analyze_c(self):
           na = [ni for ni in self.items]
-          ma = [self.expected_return(ni) for ni in na]           # mu
-          sa = [self.standard_deviation(ni) for ni in na]        # sigma
+          ma = [self.mu(ni) for ni in na]           # mu
+          sa = [self.sigma(ni) for ni in na]        # sigma
           ca = ['r', 'c', 'm', 'y', 'g']
 
           for i in range(0, len(na)):
@@ -75,24 +76,22 @@ class Forecast(object): # =====================================
           pl.show()
           pass
 
-     def analyze_d(self):
-          ls: list = []
-          for nm in self.items:
-               ls.append((nm, self.expected_return(nm), self.standard_deviation(nm)))
-          
+     def as_data_frame(self) -> pd.DataFrame:
           CV = lambda sigma, miu : round(sigma / miu, 4) if (miu > 0) else math.nan
+          dc = {}
+          dc['Name'] = [nm for nm in self.items]
+          dc['Mu'] = [self.mu(nm) for nm in self.items]
+          dc['Sigma'] = [self.sigma(nm) for nm in self.items]
+          dc['CV'] = [CV(self.sigma(nm), self.mu(nm)) for nm in self.items]
 
-          print(f'Sym  Miu      Sigm     CV')
-          print(f'------------------------------')
-          for li in ls:
-               print('{}    {:f} {:f} {:f}'.format(li[0], li[1], li[2], CV(li[2], li[1])))
-          pass
+          df = pd.DataFrame(dc)
+          return df
 
      # mu      : average of samples (x-bar)
      # sigma   : standard deviation
      def draw_normal_distribution_curve(self, col: str, color = 'r') -> None:
-          miu = self.expected_return(col)
-          sig = self.standard_deviation(col)
+          miu = self.mu(col)
+          sig = self.sigma(col)
 
           x = np.linspace(miu - (3 * sig), miu + (3 * sig), 25)
           y = ss.norm.pdf(x, miu, sig)
@@ -109,9 +108,10 @@ class Forecast(object): # =====================================
 # = Forecast ================================================== 
 
 fo = Forecast()
-# fo.analyze_b()
-# fo.analyze_c()
-# fo.draw_normal_distribution_curve('B')
-fo.analyze_d()
+fo.analyze_b()
+fo.analyze_c()
+fo.draw_normal_distribution_curve('B')
+df = fo.as_data_frame()
+df
 
 # %%

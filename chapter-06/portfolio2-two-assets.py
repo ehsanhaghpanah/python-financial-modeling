@@ -1,6 +1,8 @@
 # %%
 
+#
 # Two Assets Portfolio
+#
 class Asset(object):
      mu: float = 0                 # expected return (reward)
      sigma: float = 0              # risk (standard deviation)

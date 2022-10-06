@@ -38,6 +38,18 @@ class Stock(object):
           data = self.__load__(self.ohlc, self.record_number, what)
           return data.std()
 
+     def variance(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.var()
+
+     def mean(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.mean()
+
+     def median(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.median()
+
      def max(self, what: str = 'Close') -> float:
           data = self.__load__(self.ohlc, self.record_number, what)
           return data.max()
@@ -45,6 +57,10 @@ class Stock(object):
      def min(self, what: str = 'Close') -> float:
           data = self.__load__(self.ohlc, self.record_number, what)
           return data.min()
+
+     def cv(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.std() / self.mu().mean()
 
      def draw(self, what: str = 'Close') -> None:
           data = self.__load__(self.ohlc, self.record_number, what)
@@ -97,14 +113,58 @@ class Stock(object):
 
 # = Stock =====================================================
 
-symbol_name = 'فملي'
-record_number = 50
-stock = Stock(symbol_name)
+class StockBasket(object):
+
+     stocks: list = []
+
+     def __init__(self, symbol_names: list) -> None:
+          self.symbol_names = symbol_names
+          for name in symbol_names:
+               self.stocks.append(Stock(name))
+          pass
+
+     def compare_mu(self):
+          for stock in self.stocks:
+               print(f'{stock.symbol_name} mu (mean) = {round((stock.mu().mean() * 100), 4)}')
+          pass
+
+     def compare_sigma(self):
+          for stock in self.stocks:
+               print(f'{stock.symbol_name} sigma = {round((stock.sigma() * 100), 4)}')
+          pass
+
+     def as_data_frame(self) -> pd.DataFrame:
+
+          dc = {}
+          dc['Symbol Name'] = [stock.symbol_name for stock in self.stocks]
+          dc['Mu'] = [round(stock.mu().mean(), 4) * 100 for stock in self.stocks]
+          dc['Sigma'] = [round(stock.sigma(), 2) for stock in self.stocks]
+          dc['max'] = [round(stock.max(), 4) for stock in self.stocks]
+          dc['min'] = [round(stock.min(), 4) for stock in self.stocks]
+          dc['variance'] = [round(stock.variance(), 4) for stock in self.stocks]
+          dc['mean price'] = [round(stock.mean(), 4) for stock in self.stocks]
+
+          df = pd.DataFrame(dc)
+          return df
+
+# = StockBasket ===============================================
+
+# symbol_name = 'فملي'
+# record_number = 50
+# stock = Stock(symbol_name)
 # print(stock.mu())
 # print(stock.sigma())
 # print(stock.max())
 # print(stock.min())
 # stock.draw()
-stock.draw_sigma_band()
+# stock.draw_sigma_band()
 # stock.draw_special()
 # stock.draw_mu()
+
+symbol_names = ['فملي', 'شبندر', 'خساپا']
+sb = StockBasket(symbol_names)
+# sb.compare_mu()
+# sb.compare_sigma()
+
+df = sb.as_data_frame()
+df
