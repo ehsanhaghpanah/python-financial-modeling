@@ -6,9 +6,9 @@ import scipy as sp
 import scipy.stats as ss
 
 class Asset(object):
-     mu: float = 0
-     sigma: float = 0
-     weight: float = 0
+     mu: float = 0                 # expected return (reward)
+     sigma: float = 0              # risk (standard deviation)
+     weight: float = 0             # 
 
      def __init__(self, m: float, s: float, w: float) -> None:
           self.mu = m
@@ -16,16 +16,16 @@ class Asset(object):
           self.weight = w
           pass
 
+     # expected return of the asset in the portfolio = (mu * weight)
      def reward(self) -> float:
           return self.mu * self.weight
-     
-     def risk(self) -> float:
-          return self.sigma * self.weight
 
+# = Asset =====================================================
 class Portfolio(object):
      assets: list = []
+     correlations: list = []
 
-     def __init__(self, al: list) -> None:
+     def __init__(self, al: list, ca: list) -> None:
           ar = np.asarray([ai.weight for ai in al])
           if (ar.sum() != 1):
                raise Exception("portfolio's assets' weights summation is not one")
@@ -42,6 +42,9 @@ class Portfolio(object):
           ls = [li.risk() for li in self.assets]
           return round(sum(ls, 0), 4)
 
+     # def risk(self) -> float:
+     #      return self.sigma * self.weight
+
 # = Portfolio =================================================
 
 # al = []
@@ -53,9 +56,9 @@ class Portfolio(object):
 # print(f'portfolio return = {pr.reward()}')
 # print(f'portfolio risk = {pr.risk()}')
 
-al = []
-al.append(Asset(0.174, 0.05, 0.5))
-al.append(Asset(0.017, 0.08, 0.5))
-pr = Portfolio(al)
-print(f'portfolio return = {pr.reward()}')
-print(f'portfolio risk = {pr.risk()}')
+# al = []
+# al.append(Asset(0.174, 0.05, 0.5))
+# al.append(Asset(0.017, 0.08, 0.5))
+# pr = Portfolio(al)
+# print(f'portfolio return = {pr.reward()}')
+# print(f'portfolio risk = {pr.risk()}')

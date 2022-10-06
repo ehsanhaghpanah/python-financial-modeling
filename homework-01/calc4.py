@@ -19,7 +19,7 @@ def fv_ed_pmt(pmt: float, r: float, n: int):
 #
 # payment at the beginning of each period = payment in advanced
 def fv_ad_pmt(pmt: float, r: float, n: int):
-     return pmt * (1 + r) * ((((1 + r) ** n) - 1)/r)
+     return pmt * (1 + r) * ((((1 + r) ** n) - 1) / r)
 
 #
 # sigma fv(s) : payment at the end of each period
@@ -51,10 +51,17 @@ def pv_ed_pmt(pmt: float, r: float, n: int):
 # z = round(fv_ad(pv, pmt, r, n), 0)
 # print('{:,}'.format(z))
 
-pv = 1_328_000
-r = 0.1
-n = 5
-pmt = 500_000
+# pv = 1_328_000
+# r = 0.1
+# n = 5
+# pmt = 500_000
+# z = round(fv_ad(pv, pmt, r, n), 0)
+# print('{:,}'.format(z))
+
+pv = 0
+r = 0.12
+n = 9
+pmt = 150_000
 z = round(fv_ad(pv, pmt, r, n), 0)
 print('{:,}'.format(z))
 
