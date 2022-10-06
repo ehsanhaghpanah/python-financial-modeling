@@ -1,49 +1,68 @@
 # %%
 
+from enum import Enum
 import tsemodule5 as tm5
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as pl
+
+class ReturnKind(Enum):
+     SIMPLE = 1,
+     LOGARITHMIC = 2
 
 class Stock(object):
      
      symbol_name: str = ""
      record_number: int = 100
      ohlc: pd.DataFrame
-     data: np.array
 
-     def __init__(self, sn: str, rn: int = 100) -> None:
-          self.symbol_name = sn
-          self.record_number = rn
-
-          self.ohlc = tm5.stock(self.symbol_name, standard= True)
-          pass
-     
-     def load(self, what: str = 'Close') -> None:
-          self.data = self.ohlc[what]
-          self.data = self.data[::-1] # ascending date-time
-          self.data = self.data.tail(self.record_number)
+     def __init__(self, symbol_name: str, record_number: int = 100) -> None:
+          self.symbol_name = symbol_name
+          self.record_number = record_number
+          self.ohlc = tm5.stock(self.symbol_name, standard= True, value= self.record_number)
           pass
 
-     # data : pandas.core.series.Series
-     def get_return_simple(self):  # returns a series of returns
-          return (self.data / self.data.shift(1)) - 1
+     def __load__(self, ohlc: pd.DataFrame, record_number: int, what: str = 'Close') -> np.ndarray:
+          data = ohlc[what]
+          data = data[::-1] # ascending date-time
+          return data.tail(record_number)
 
-     # data : pandas.core.series.Series
-     def get_return_logarithmic(self):  # returns a series of returns
-          return np.log(self.data / self.data.shift(1))
+     def mu(self, kind: ReturnKind = ReturnKind.SIMPLE, what: str = 'Close'):  # returns a series of returns
+          data: np.array = self.__load__(self.ohlc, self.record_number, what)
+          if (kind == ReturnKind.SIMPLE):
+               return (data / data.shift(1)) - 1
+          else:
+               return np.log(data / data.shift(1))
 
-     def daily_return(self):
-          rls = []
-          for i in range(1, len(self.data)):
-               ror = ((self.data[i] / self.data[i - 1]) - 1) * 100
-               rls.append(round(ror, 2))
-          return rls
+     def sigma(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.std()
 
-     def get_std(self):
-          return self.data.std()
+     def variance(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.var()
+
+     def mean(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.mean()
+
+     def median(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.median()
+
+     def max(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.max()
+
+     def min(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.min()
+
+     def cv(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return data.std() / self.mu().mean()
      
-     def draw(self):
+     def draw_special(self):
           close = self.ohlc['Close']
           high = self.ohlc['High']
           pl.plot(close, color= 'r', label= 'Close')
@@ -52,18 +71,7 @@ class Stock(object):
           pl.show()
           pass
 
-     def foo(self):
-          print(f'max = {self.data.max()}')
-          print(f'min = {self.data.min()}')
-          pass
-
-     def sort(self, what: str = 'Close'):
-          temp = self.ohlc[self.ohlc[:, 2].argsort()]
-          print(temp)
-          pass
-
      def draw_complex(self) -> None:
-
           close  = np.flip(self.ohlc['Close'])
           volume = np.flip(self.ohlc['Volume'])
 
@@ -71,7 +79,7 @@ class Stock(object):
           pl.xlabel("time")
           pl.ylabel("price/volume")
 
-          pl.subplot(211)
+          pl.subplot(221)
           pl.plot(close, color= 'b', label= 'Close')
           min_x = list(dict(close))[close.argmin()]
           max_x = list(dict(close))[close.argmax()]
@@ -82,23 +90,51 @@ class Stock(object):
           pl.bar(x= np.arange(volume.size), height= volume, color= 'orange')
 
           pl.show()
+          pass
 
+     #
+     # https://realpython.com/pandas-sort-python/
+     def sort(self, what: str = 'Close'):
+          return self.ohlc.sort_values(by= what, ascending= True)
+
+     # values between 0 and 1 (Min-Max Scaling)
+     def transform1(self, what: str = 'Close'):
+          data = self.__load__(self.ohlc, self.record_number, what)
+
+          min_value = data.min()
+          max_value = data.max()
+
+          transformed_data = (data - min_value) / (max_value - min_value)
+          return transformed_data
+
+     # z-score Standardization (Normalization)
+     def transform2(self, what: str = 'Close'):
+          data = self.__load__(self.ohlc, self.record_number, what)
+
+          mu = data.mean()
+          sigma = data.std()
+
+          transformed_data = (data - mu) / sigma
+          return transformed_data
+
+     # number of items greater than mean()
+     def foo(self, what: str = 'Close'):
+          close = self.__load__(self.ohlc, self.record_number, what)
+          a = close[close > close.mean()].size
+          print(a)
+          b = close[close < close.mean()].size
+          print(b)
           pass
 
 # = Stock =====================================================
 
 symbol_name = 'فملي'
 record_number = 50
-
-stock = Stock(symbol_name)
-stock.load()
-# print(f'simple return = {stock.get_return_simple()}')
-# print(f'logarithmic return = {stock.get_return_logarithmic()}')
-# print(f'daily return = {stock.daily_return()}')
-# print(f'standard deviation = {stock.get_std()}')
-# stock.draw()
-
+stock = Stock(symbol_name, record_number)
+# stock.draw_special()
+# stock.draw_complex()
 # stock.foo()
-stock.draw_complex()
-
-# stock.sort()
+# df = stock.sort('Volume')
+# df
+# df = stock.transform2()
+# df

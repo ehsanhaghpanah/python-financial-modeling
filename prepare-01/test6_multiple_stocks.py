@@ -21,7 +21,7 @@ class Stock(object):
           self.record_number = record_number
           self.ohlc = tm5.stock(self.symbol_name, standard= True, value= self.record_number)
           pass
-     
+
      def __load__(self, ohlc: pd.DataFrame, record_number: int, what: str = 'Close') -> np.ndarray:
           data = ohlc[what]
           data = data[::-1] # ascending date-time
@@ -116,11 +116,13 @@ class Stock(object):
 class StockBasket(object):
 
      stocks: list = []
+     duration: int = 10            # number of records
 
-     def __init__(self, symbol_names: list) -> None:
+     def __init__(self, symbol_names: list, duration = 10) -> None:
           self.symbol_names = symbol_names
+          self.duration = duration
           for name in symbol_names:
-               self.stocks.append(Stock(name))
+               self.stocks.append(Stock(name, record_number= self.duration))
           pass
 
      def compare_mu(self):
@@ -133,7 +135,7 @@ class StockBasket(object):
                print(f'{stock.symbol_name} sigma = {round((stock.sigma() * 100), 4)}')
           pass
 
-     def as_data_frame(self) -> pd.DataFrame:
+     def as_data_frame1(self) -> pd.DataFrame:
 
           dc = {}
           dc['Symbol Name'] = [stock.symbol_name for stock in self.stocks]
@@ -143,6 +145,17 @@ class StockBasket(object):
           dc['min'] = [round(stock.min(), 4) for stock in self.stocks]
           dc['variance'] = [round(stock.variance(), 4) for stock in self.stocks]
           dc['mean price'] = [round(stock.mean(), 4) for stock in self.stocks]
+
+          df = pd.DataFrame(dc)
+          return df
+
+     def as_data_frame2(self) -> pd.DataFrame:
+
+          dc = {}
+          dc['Symbol Name'] = [stock.symbol_name for stock in self.stocks]
+          dc['Mu'] = [round(stock.mu().mean(), 4) * 100 for stock in self.stocks]
+          dc['CV'] = [round(stock.cv(), 0) for stock in self.stocks]
+          dc['sigma'] = [round(stock.variance(), 0) for stock in self.stocks]
 
           df = pd.DataFrame(dc)
           return df
@@ -161,10 +174,14 @@ class StockBasket(object):
 # stock.draw_special()
 # stock.draw_mu()
 
-symbol_names = ['فملي', 'شبندر', 'خساپا']
+# symbol_names = ['فملي', 'شبندر', 'خساپا']
+symbol_names = ['شستا', 'خساپا']
 sb = StockBasket(symbol_names)
 # sb.compare_mu()
 # sb.compare_sigma()
-
-df = sb.as_data_frame()
+# df = sb.as_data_frame1()
+# df
+df = sb.as_data_frame2()
 df
+
+
