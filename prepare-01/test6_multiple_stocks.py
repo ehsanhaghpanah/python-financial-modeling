@@ -62,6 +62,20 @@ class Stock(object):
           data = self.__load__(self.ohlc, self.record_number, what)
           return data.std() / self.mu().mean()
 
+     # risk-free 
+     def sharpe(self, rf:float, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return (self.mu().mean() - rf) / data.std()
+
+     def semi_variance(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          a1 = np.asarray(data)
+          av = a1.mean()
+          ps = [(pi < av) for pi in self.prices]
+          qs = [((pj - av) ** 2) for pj in ps]
+          a2 = np.asarray(qs)
+          return a2.sum() / (a2.size - 1)
+
      def draw(self, what: str = 'Close') -> None:
           data = self.__load__(self.ohlc, self.record_number, what)
           pl.title = self.symbol_name

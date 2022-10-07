@@ -71,6 +71,25 @@ class Stock(object):
           data = self.__load__(self.ohlc, self.record_number, what)
           return data.std() / self.mu().mean()
 
+     # risk-free 
+     def sharpe(self, rf: float, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          return (self.mu(what).mean() - rf) / data.std()
+
+     def semi_variance(self, what: str = 'Close') -> float:
+          data = self.__load__(self.ohlc, self.record_number, what)
+          a1 = np.asarray(data)
+          av = a1.mean()
+          ps = [(pi < av) for pi in data]
+          qs = [((pj - av) ** 2) for pj in ps]
+          a2 = np.asarray(qs)
+          return a2.sum() / (a2.size - 1)
+
+     def sortino(self, rf: float, what: str = 'Close') -> float:
+          sv = self.semi_variance(what)
+          mu = self.mu(what).mean()
+          return (mu - rf) / sv ** 0.5
+
      def draw(self, what: str = 'Close') -> None:
           data = self.__load__(self.ohlc, self.record_number, what)
           pl.title = self.symbol_name
@@ -129,33 +148,37 @@ class Stock(object):
 
 stock1 = Stock('شستا', 'data.csv')
 
-close = stock1.get_data()
-vol = stock1.get_data('Volume')
+def foo():
+     close = stock1.get_data()
+     vol = stock1.get_data('Volume')
 
-x_min, y_min = close.loc[close == close.min()].index, close[close == close.min()]
-x_max, y_max = close.loc[close == close.max()].index, close[close == close.max()]
+     x_min, y_min = close.loc[close == close.min()].index, close[close == close.min()]
+     x_max, y_max = close.loc[close == close.max()].index, close[close == close.max()]
 
-h_mean = close.mean()
+     h_mean = close.mean()
 
-o_mean = np.array([1 for c in close if c >= h_mean]).sum()
-b_mean = np.array([1 for c in close if c < h_mean]).sum()
+     o_mean = np.array([1 for c in close if c >= h_mean]).sum()
+     b_mean = np.array([1 for c in close if c < h_mean]).sum()
 
-print(f'over mean = {o_mean}')
-print(f'below mean = {b_mean}')
+     print(f'over mean = {o_mean}')
+     print(f'below mean = {b_mean}')
 
-fig, axs = pl.subplots(2, 1)        # rows, cols
-axs[0].plot(close)
-axs[0].set_xlabel('Date')
-axs[0].set_ylabel('Close')
-axs[0].axhline(h_mean, color= 'r')
-axs[0].plot(x_min, y_min, 'o', markersize= 5, color= 'm', label= 'BUY')
-axs[0].plot(x_max, y_max, 'o', markersize= 5, color= 'm', label= 'SEL')
-axs[0].plot([x_min, x_max], [y_min, y_max], color= 'y')
-axs[0].grid(True)
+     fig, axs = pl.subplots(2, 1)        # rows, cols
+     axs[0].plot(close)
+     axs[0].set_xlabel('Date')
+     axs[0].set_ylabel('Close')
+     axs[0].axhline(h_mean, color= 'r')
+     axs[0].plot(x_min, y_min, 'o', markersize= 5, color= 'm', label= 'BUY')
+     axs[0].plot(x_max, y_max, 'o', markersize= 5, color= 'm', label= 'SEL')
+     axs[0].plot([x_min, x_max], [y_min, y_max], color= 'y')
+     axs[0].grid(True)
 
-axs[1].set_xlabel('Date')
-axs[1].set_ylabel('Volume')
-axs[1].bar(vol.index, vol)
+     axs[1].set_xlabel('Date')
+     axs[1].set_ylabel('Volume')
+     axs[1].bar(vol.index, vol)
 
-fig.tight_layout(pad= 0.25)
-fig.set_size_inches((7.5, 7.5))
+     fig.tight_layout(pad= 0.25)
+     fig.set_size_inches((7.5, 7.5))
+
+print(stock1.sharpe(.1))
+print(stock1.semi_variance())

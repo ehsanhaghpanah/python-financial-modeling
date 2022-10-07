@@ -16,3 +16,5 @@ print('npv2 = {:,}'.format(npv))
 
 
 # %%
+
+
