@@ -138,3 +138,6 @@ stock = Stock(symbol_name, record_number)
 # df
 # df = stock.transform2()
 # df
+
+df = stock.mu()[:10]
+df

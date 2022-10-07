@@ -22,11 +22,12 @@ def nt(pv: float, fv: float, r: float):
 # z = round(fv(pv, r, n), 2)
 # print('{:,}'.format(z))
 
-fv = 9_110_594
-r = 0.2
-n = 3
-z = round(pv(fv, r, n), 2)
-print('{:,}'.format(z))
+# fv = 9_110_594
+# r = 0.2
+# n = 3
+# z = round(pv(fv, r, n), 2)
+# print('{:,}'.format(z))
+
 
 
 # %%
